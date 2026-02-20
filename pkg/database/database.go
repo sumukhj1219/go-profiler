@@ -2,9 +2,11 @@ package database
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
 	"github.com/sumukhj1219/go-profiler/internals/config"
 	"github.com/sumukhj1219/go-profiler/pkg/logger"
 )
@@ -14,7 +16,7 @@ func New(ctx context.Context) (db *sqlx.DB, err error) {
 	logger.L.Info("Database is connecting...")
 	db, err = sqlx.Open("postgres", dsn)
 	if err != nil {
-		logger.L.Error("Unable to connect database %v", err)
+		fmt.Printf("Unable to connect database %v", err)
 		return nil, err
 	}
 

@@ -9,11 +9,18 @@ import (
 	"time"
 
 	"github.com/sumukhj1219/go-profiler/internals/config"
+	"github.com/sumukhj1219/go-profiler/pkg/database"
 	"github.com/sumukhj1219/go-profiler/pkg/logger"
 )
 
 func Start(cfg config.Config, ctx context.Context) {
 	logger.Load(cfg.Level)
+
+	db, err := database.New(ctx)
+	if err != nil {
+		logger.L.Fatal("Cannot connect to database %v", err)
+	}
+	defer db.Close()
 
 	serverCtx, cancel := context.WithCancel(ctx)
 
