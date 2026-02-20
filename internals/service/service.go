@@ -2,8 +2,15 @@ package service
 
 import (
 	"context"
+	"errors"
 
 	"github.com/sumukhj1219/go-profiler/internals/models"
+)
+
+var (
+	ErrDuplicateEmailOrUsername = errors.New("email or username already exists")
+	ErrInvalidEmailFormat       = errors.New("email address is invalid")
+	ErrNotFound                 = errors.New("user not found")
 )
 
 type UserService interface {
