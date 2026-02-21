@@ -13,9 +13,9 @@ func main() {
 	cfg, err := config.Load()
 
 	if err != nil {
-		log.Fatal("unable to load config variables")
+		log.Fatal("unable to load config variables ", err)
 		return
 	}
-	
+
 	server.Start(*cfg, ctx)
 }

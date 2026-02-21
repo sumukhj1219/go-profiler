@@ -9,6 +9,7 @@ import (
 type Config struct {
 	Host           string `mapstructure:"host"`
 	Port           string `mapstructure:"port"`
+	StatsVizPort   string `mapstructure:"stats_viz_port"`
 	Log            `mapstructure:",squash"`
 	RedisConfig    `mapstructure:",squash"`
 	DatabaseConfig `mapstructure:",squash"`
@@ -52,4 +53,12 @@ func Load() (*Config, error) {
 	}
 
 	return &cfg, nil
+}
+
+func (db *DatabaseConfig) GetDSN() string {
+	sslMode := "disable"
+	if db.SSLMode == "true" {
+		sslMode = "require"
+	}
+	return fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s", db.Host, db.Port, db.User, db.Password, db.Name, sslMode)
 }

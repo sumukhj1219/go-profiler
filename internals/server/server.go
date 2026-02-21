@@ -8,21 +8,49 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/gorilla/mux"
 	"github.com/sumukhj1219/go-profiler/internals/config"
+	"github.com/sumukhj1219/go-profiler/internals/handler"
+	"github.com/sumukhj1219/go-profiler/internals/repository"
+	"github.com/sumukhj1219/go-profiler/internals/routes"
+	"github.com/sumukhj1219/go-profiler/internals/service"
+	"github.com/sumukhj1219/go-profiler/pkg/cache"
+	"github.com/sumukhj1219/go-profiler/pkg/database"
 	"github.com/sumukhj1219/go-profiler/pkg/logger"
+	"github.com/sumukhj1219/go-profiler/pkg/stats"
 )
 
 func Start(cfg config.Config, ctx context.Context) {
-	logger.Load(cfg.Level)
+	logger.Load(cfg.Log.Level)
 
+	db, err := database.New(ctx, cfg)
+	redisClient := cache.NewRedisClient(cfg.RedisConfig)
+	stats.NewStats(cfg)
+
+	if err != nil {
+		logger.L.Fatal("Cannot connect to database %v", err)
+	}
+	defer db.Close()
+
+	router := mux.NewRouter()
 	serverCtx, cancel := context.WithCancel(ctx)
+
+	userRepo := repository.NewUserRepository(db)
+	userService := service.NewService(userRepo, redisClient)
+
+	handlers := handler.Handler{
+		UserHandler: handler.NewHandler(userService, *logger.L),
+	}
+
+	routes.RegisterRoutes(router, handlers)
 
 	defer cancel()
 
 	addr := cfg.Host + ":" + cfg.Port
 
 	srv := &http.Server{
-		Addr: addr,
+		Addr:    addr,
+		Handler: router,
 	}
 
 	go func() {
