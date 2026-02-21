@@ -9,6 +9,7 @@ import (
 type Config struct {
 	Host           string `mapstructure:"host"`
 	Port           string `mapstructure:"port"`
+	StatsVizPort   string `mapstructure:"stats_viz_port"`
 	Log            `mapstructure:",squash"`
 	RedisConfig    `mapstructure:",squash"`
 	DatabaseConfig `mapstructure:",squash"`

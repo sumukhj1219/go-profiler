@@ -17,6 +17,7 @@ import (
 	"github.com/sumukhj1219/go-profiler/pkg/cache"
 	"github.com/sumukhj1219/go-profiler/pkg/database"
 	"github.com/sumukhj1219/go-profiler/pkg/logger"
+	"github.com/sumukhj1219/go-profiler/pkg/stats"
 )
 
 func Start(cfg config.Config, ctx context.Context) {
@@ -24,6 +25,7 @@ func Start(cfg config.Config, ctx context.Context) {
 
 	db, err := database.New(ctx, cfg)
 	redisClient := cache.NewRedisClient(cfg.RedisConfig)
+	stats.NewStats(cfg)
 
 	if err != nil {
 		logger.L.Fatal("Cannot connect to database %v", err)
