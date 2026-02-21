@@ -7,6 +7,7 @@ require golang.org/x/crypto v0.48.0
 require (
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
 	github.com/go-viper/mapstructure/v2 v2.4.0 // indirect
+	github.com/gorilla/mux v1.8.1 // indirect
 	github.com/jmoiron/sqlx v1.4.0 // indirect
 	github.com/lib/pq v1.11.2 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
