@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
@@ -35,24 +36,12 @@ func (u *userRepository) CreateUser(ctx context.Context, user models.User) error
 	return nil
 }
 
-func (u *userRepository) UpdateUser(ctx context.Context, user models.User) error {
-	query := updateUserQuery
-	_, err := u.db.NamedExecContext(ctx, query, user)
-	if err != nil {
-		var pqErr *pq.Error
-		if errors.As(err, &pqErr) && pqErr.Code == "23505" {
-			return ErrDuplicateEmailOrUsername
-		}
-		return err
-	}
-	return nil
-}
-
 func (u *userRepository) GetUserByEmail(ctx context.Context, email string) (*models.User, error) {
 	var user models.User
 	err := u.db.GetContext(ctx, &user, getUserByEmailQuery, email)
 	if err != nil {
-		return nil, ErrNotFound
+		fmt.Println("DB ERROR:", err)
+		return nil, err
 	}
 	return &user, nil
 }
@@ -66,11 +55,16 @@ func (u *userRepository) GetUserById(ctx context.Context, id int64) (*models.Use
 	return &user, nil
 }
 
-func (u *userRepository) GetUsers(ctx context.Context) (*[]models.User, error) {
-	var user []models.User
-	err := u.db.GetContext(ctx, &user, getUsersQuery)
+func (u *userRepository) GetUsers(ctx context.Context) ([]models.User, error) {
+	var users []models.User
+
+	err := u.db.SelectContext(ctx, &users, getUsersQuery)
 	if err != nil {
 		return nil, err
 	}
-	return &user, nil
+	if users == nil {
+		users = make([]models.User, 0)
+	}
+
+	return users, nil
 }

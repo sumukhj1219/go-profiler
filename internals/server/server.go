@@ -44,7 +44,8 @@ func Start(cfg config.Config, ctx context.Context) {
 	addr := cfg.Host + ":" + cfg.Port
 
 	srv := &http.Server{
-		Addr: addr,
+		Addr:    addr,
+		Handler: router,
 	}
 
 	go func() {

@@ -61,37 +61,6 @@ func (h *userHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(user)
 }
 
-func (h *userHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
-	var req UpdateUserRequest
-
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "invalid request body", http.StatusBadRequest)
-		return
-	}
-
-	user := models.User{
-		ID:           req.ID,
-		Username:     req.Username,
-		Email:        req.Email,
-		FirstName:    req.FirstName,
-		LastName:     req.LastName,
-		Phone:        req.Phone,
-		ProfileImage: req.ProfileImage,
-		Bio:          req.Bio,
-		DateOfBirth:  req.DateOfBirth,
-		IsActive:     req.IsActive,
-		IsVerified:   req.IsVerified,
-	}
-
-	if err := h.userService.UpdateUser(r.Context(), user); err != nil {
-		http.Error(w, "failed to update user", http.StatusInternalServerError)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(user)
-}
-
 func (h *userHandler) GetUserByEmail(w http.ResponseWriter, r *http.Request) {
 	email := r.URL.Query().Get("email")
 	if email == "" {
