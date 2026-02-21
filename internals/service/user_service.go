@@ -2,9 +2,13 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"net/mail"
+	"time"
 
+	"github.com/redis/go-redis/v9"
 	"github.com/sumukhj1219/go-profiler/internals/models"
 	"github.com/sumukhj1219/go-profiler/internals/repository"
 	"golang.org/x/crypto/bcrypt"
@@ -12,11 +16,13 @@ import (
 
 type userService struct {
 	userRepository repository.UserRepository
+	redisClient    *redis.Client
 }
 
-func NewService(userRepository repository.UserRepository) UserService {
+func NewService(userRepository repository.UserRepository, redisClient *redis.Client) UserService {
 	return &userService{
 		userRepository: userRepository,
+		redisClient:    redisClient,
 	}
 }
 
@@ -38,6 +44,16 @@ func (s *userService) GetUserByEmail(ctx context.Context, email string) (*models
 	if err != nil {
 		return nil, ErrInvalidEmailFormat
 	}
+
+	cacheKey := fmt.Sprintf("user:email:%s", email)
+
+	val, err := s.redisClient.Get(ctx, cacheKey).Result()
+	if err == nil {
+		var user models.User
+		json.Unmarshal([]byte(val), &user)
+		return &user, nil
+	}
+
 	user, err := s.userRepository.GetUserByEmail(ctx, email)
 	if errors.Is(err, repository.ErrNotFound) {
 		return nil, ErrNotFound
@@ -46,6 +62,15 @@ func (s *userService) GetUserByEmail(ctx context.Context, email string) (*models
 }
 
 func (s *userService) GetUserById(ctx context.Context, id int64) (*models.User, error) {
+	cacheKey := fmt.Sprintf("user:id:%d", id)
+
+	val, err := s.redisClient.Get(ctx, cacheKey).Result()
+	if err == nil {
+		var user models.User
+		json.Unmarshal([]byte(val), &user)
+		return &user, nil
+	}
+
 	user, err := s.userRepository.GetUserById(ctx, id)
 	if errors.Is(err, repository.ErrNotFound) {
 		return nil, ErrNotFound
@@ -58,6 +83,21 @@ func (s *userService) GetUserById(ctx context.Context, id int64) (*models.User, 
 }
 
 func (s *userService) GetUsers(ctx context.Context) (*[]models.User, error) {
+	cacheKey := "users:all"
+
+	val, err := s.redisClient.Get(ctx, cacheKey).Result()
+	if err == nil {
+		var users []models.User
+		json.Unmarshal([]byte(val), &users)
+		return &users, nil
+	}
+
 	users, _ := s.userRepository.GetUsers(ctx)
+	if err != nil {
+		return nil, err
+	}
+	usersJSON, _ := json.Marshal(users)
+	s.redisClient.Set(ctx, cacheKey, usersJSON, 2*time.Minute)
+
 	return &users, nil
 }

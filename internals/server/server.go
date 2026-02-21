@@ -14,6 +14,7 @@ import (
 	"github.com/sumukhj1219/go-profiler/internals/repository"
 	"github.com/sumukhj1219/go-profiler/internals/routes"
 	"github.com/sumukhj1219/go-profiler/internals/service"
+	"github.com/sumukhj1219/go-profiler/pkg/cache"
 	"github.com/sumukhj1219/go-profiler/pkg/database"
 	"github.com/sumukhj1219/go-profiler/pkg/logger"
 )
@@ -22,6 +23,8 @@ func Start(cfg config.Config, ctx context.Context) {
 	logger.Load(cfg.Log.Level)
 
 	db, err := database.New(ctx, cfg)
+	redisClient := cache.NewRedisClient(cfg.RedisConfig)
+
 	if err != nil {
 		logger.L.Fatal("Cannot connect to database %v", err)
 	}
@@ -31,7 +34,7 @@ func Start(cfg config.Config, ctx context.Context) {
 	serverCtx, cancel := context.WithCancel(ctx)
 
 	userRepo := repository.NewUserRepository(db)
-	userService := service.NewService(userRepo)
+	userService := service.NewService(userRepo, redisClient)
 
 	handlers := handler.Handler{
 		UserHandler: handler.NewHandler(userService, *logger.L),
