@@ -92,10 +92,15 @@ func (s *userService) GetUsers(ctx context.Context) (*[]models.User, error) {
 		return &users, nil
 	}
 
-	users, _ := s.userRepository.GetUsers(ctx)
+	if err != nil && err != redis.Nil {
+		return nil, err
+	}
+
+	users, err := s.userRepository.GetUsers(ctx)
 	if err != nil {
 		return nil, err
 	}
+
 	usersJSON, _ := json.Marshal(users)
 	s.redisClient.Set(ctx, cacheKey, usersJSON, 2*time.Minute)
 
