@@ -14,9 +14,9 @@ import (
 )
 
 func Start(cfg config.Config, ctx context.Context) {
-	logger.Load(cfg.Level)
+	logger.Load(cfg.Log.Level)
 
-	db, err := database.New(ctx)
+	db, err := database.New(ctx, cfg)
 	if err != nil {
 		logger.L.Fatal("Cannot connect to database %v", err)
 	}

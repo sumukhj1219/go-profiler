@@ -11,8 +11,8 @@ import (
 	"github.com/sumukhj1219/go-profiler/pkg/logger"
 )
 
-func New(ctx context.Context) (db *sqlx.DB, err error) {
-	dsn := config.Cfg.GetDSN()
+func New(ctx context.Context, cfg config.Config) (db *sqlx.DB, err error) {
+	dsn := cfg.DatabaseConfig.GetDSN()
 	logger.L.Info("Database is connecting...")
 	db, err = sqlx.Open("postgres", dsn)
 	if err != nil {
